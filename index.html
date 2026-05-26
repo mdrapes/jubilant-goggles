@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Concept · A re-engagement prompt that knows who you are</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#141118; --ink2:#1c1824; --surface:#221c2b; --surface2:#2a2333;
+    --line:rgba(255,255,255,.10); --cream:#F4EEE7; --muted:#a79fb0; --faint:#6f6779;
+    --coral:#FF6A5A; --coral-soft:#ff8a7d; --gold:#E8B864; --good:#5ED2A0; --r:18px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:'Hanken Grotesk',system-ui,sans-serif;
+    background:
+      radial-gradient(900px 500px at 18% -8%, rgba(255,106,90,.10), transparent 60%),
+      radial-gradient(700px 500px at 95% 5%, rgba(232,184,100,.07), transparent 55%),
+      var(--ink);
+    color:var(--cream); min-height:100vh; padding:42px 20px 80px; -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:900px;margin:0 auto}
+  .kicker{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--coral);font-weight:600;margin-bottom:12px}
+  h1.title{font-family:'Fraunces',serif;font-weight:500;font-size:clamp(29px,4.6vw,44px);line-height:1.05;letter-spacing:-.01em;margin-bottom:14px}
+  h1.title em{font-style:italic;color:var(--gold)}
+  .lede{color:var(--muted);font-size:16.5px;line-height:1.55;max-width:64ch}
+  .disclaimer{margin-top:14px;font-size:12.5px;color:var(--faint);line-height:1.5;border-left:2px solid var(--line);padding-left:12px;max-width:62ch}
+
+  .toggle{display:inline-flex;gap:4px;margin:30px 0 8px;padding:5px;background:var(--ink2);border:1px solid var(--line);border-radius:999px}
+  .toggle button{font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;border:none;background:transparent;color:var(--muted);padding:10px 18px;border-radius:999px;transition:.22s ease;white-space:nowrap}
+  .toggle button .dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:7px;vertical-align:middle}
+  .toggle button[data-m="before"] .dot{background:var(--faint)}
+  .toggle button[data-m="after"] .dot{background:var(--coral)}
+  .toggle button.active{background:var(--surface2);color:var(--cream)}
+  .mode-note{font-size:13.5px;color:var(--faint);margin-bottom:26px;min-height:18px;max-width:70ch}
+
+  .stage{display:flex;gap:40px;align-items:flex-start;flex-wrap:wrap}
+  .phone{width:344px;flex:0 0 344px;height:724px;border-radius:42px;background:#0e0c12;border:1px solid rgba(255,255,255,.09);padding:10px;position:relative;box-shadow:0 40px 80px -30px rgba(0,0,0,.8),0 0 0 1px rgba(255,255,255,.03) inset}
+  .screen{position:relative;width:100%;height:100%;border-radius:33px;overflow:hidden;background:radial-gradient(420px 280px at 80% -5%, rgba(255,106,90,.12), transparent 60%),var(--ink);display:flex;flex-direction:column}
+  .statusbar{flex:0 0 auto;display:flex;justify-content:space-between;align-items:center;padding:14px 22px 4px;font-size:13px;font-weight:600}
+  .statusbar .sig{letter-spacing:1px;font-size:11px;color:var(--muted)}
+  .scroll{flex:1 1 auto;overflow-y:auto;padding:8px 16px 14px;scrollbar-width:thin;scrollbar-color:var(--surface2) transparent}
+  .scroll::-webkit-scrollbar{width:5px}
+  .scroll::-webkit-scrollbar-thumb{background:var(--surface2);border-radius:4px}
+
+  .before-txt,.after-txt{display:none}
+  body.before .before-txt{display:inline}
+  body.after .after-txt{display:inline}
+  .before-only{display:none}
+  body.before .before-only{display:block}
+  .after-only{display:none}
+  body.after .after-only{display:block}
+
+  .h-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+  .hello{font-size:12px;color:var(--coral-soft);font-weight:600;letter-spacing:.02em;margin-top:4px}
+  .scr-title{font-family:'Fraunces',serif;font-weight:500;font-size:24px;line-height:1.06;margin:2px 0 6px}
+  .scr-sub{color:var(--muted);font-size:13px;line-height:1.45;margin-bottom:4px}
+
+  .skip{flex:0 0 auto;margin-top:6px;background:transparent;border:1px solid var(--line);color:var(--cream);font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;padding:7px 12px;border-radius:999px;display:none;align-items:center;gap:6px}
+  body.after .skip{display:inline-flex}
+  .skip:hover{border-color:var(--coral);color:var(--coral-soft)}
+
+  .seclabel{font-size:17px;margin:18px 2px 4px;font-family:'Fraunces',serif;font-weight:500}
+  .seclabel .micro{font-family:'Hanken Grotesk',sans-serif;font-size:11px;color:var(--faint);font-weight:500;display:block;margin-top:2px;letter-spacing:0}
+  .anno-inline{margin-left:6px}
+
+  /* picked-for-you rows */
+  .picks{display:flex;flex-direction:column;gap:9px;margin-top:10px}
+  .pick{position:relative;display:flex;gap:11px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:9px 10px;cursor:pointer}
+  .pick.saved{border-color:var(--coral);background:linear-gradient(0deg,rgba(255,106,90,.06),rgba(255,106,90,.06)),var(--surface)}
+  .pick-thumb{flex:0 0 50px;width:50px;height:50px;border-radius:11px}
+  .pick-body{flex:1 1 auto;min-width:0}
+  .pick-name{font-size:13.5px;font-weight:600;line-height:1.2}
+  .why{font-size:11px;color:var(--coral-soft);margin-top:3px;line-height:1.35}
+  .why b{color:var(--cream);font-weight:600}
+  .pick .bm{position:static;flex:0 0 auto}
+
+  /* explore grid */
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-top:10px}
+  .card{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;cursor:pointer;transition:.18s ease}
+  body.after .card:hover{border-color:rgba(255,106,90,.4)}
+  .card.saved{border-color:var(--coral)}
+  .thumb{height:92px;position:relative}
+  .t1{background:linear-gradient(135deg,#3a7bd5,#6dd5fa)}
+  .t2{background:linear-gradient(135deg,#c94b4b,#f29263)}
+  .t3{background:linear-gradient(135deg,#3a6073,#16222a)}
+  .t4{background:linear-gradient(135deg,#654ea3,#da9bd4)}
+  .t5{background:linear-gradient(135deg,#f7971e,#ffd200)}
+  .t6{background:linear-gradient(135deg,#a8324a,#d66d75)}
+  .cap{padding:9px 11px 12px;font-size:13px;font-weight:600;line-height:1.2}
+  .bm{width:30px;height:30px;border-radius:9px;background:rgba(10,8,14,.45);backdrop-filter:blur(4px);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s ease}
+  .card .bm{position:absolute;top:8px;right:8px}
+  .bm svg{width:15px;height:15px;fill:none;stroke:#fff;stroke-width:2}
+  .saved .bm{background:var(--coral)}
+  .saved .bm svg{fill:#fff;stroke:#fff}
+
+  .preview{max-height:0;overflow:hidden;transition:max-height .28s ease;border-top:1px solid transparent}
+  .card.open .preview{max-height:240px;border-top:1px solid var(--line)}
+  .preview-inner{padding:10px 11px 12px}
+  .preview-desc{font-size:12px;color:var(--muted);line-height:1.45;margin-bottom:8px}
+  .preview-eg{font-size:11px;color:var(--faint);line-height:1.4;margin-bottom:11px}
+  .preview-eg b{color:var(--cream);font-weight:600}
+  .save-row{display:flex;align-items:center;justify-content:space-between;font-size:12px;font-weight:600}
+  .save-pill{background:rgba(255,106,90,.14);color:var(--coral-soft);border:1px solid rgba(255,106,90,.35);border-radius:999px;padding:5px 11px;font-size:11.5px;font-weight:600;cursor:pointer}
+  .card.saved .save-pill{background:var(--coral);color:#fff;border-color:var(--coral)}
+
+  .foot{flex:0 0 auto;padding:10px 16px calc(14px + env(safe-area-inset-bottom));background:linear-gradient(to top,var(--ink) 72%,transparent);position:relative}
+  .helper{font-size:12px;line-height:1.4;text-align:center;margin-bottom:9px;min-height:16px;display:none}
+  body.after .helper{display:block}
+  .helper.zero{color:var(--muted)} .helper.go{color:var(--good)}
+  .cta{width:100%;border:none;border-radius:999px;padding:15px;font-family:inherit;font-size:15px;font-weight:700;cursor:pointer;transition:.18s ease}
+  body.before .cta{background:#3a3540;color:#7c7686;cursor:not-allowed}
+  body.before .cta::after{content:"Finish"}
+  body.after .cta{background:var(--coral);color:#1a0f0d}
+  body.after .cta:hover{background:var(--coral-soft)}
+  body.after .cta::after{content:"Save & personalise"}
+  body.after .cta.has::after{content:attr(data-label)}
+
+  .anno{display:none;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:var(--coral);color:#16100f;font-size:12px;font-weight:700;flex:0 0 auto;box-shadow:0 0 0 4px rgba(255,106,90,.18)}
+  body.after .anno{display:inline-flex}
+  .foot .anno{position:absolute;top:-5px;right:14px}
+
+  .legend{flex:1 1 320px;min-width:300px;padding-top:6px}
+  .legend h3{font-family:'Fraunces',serif;font-weight:500;font-size:21px;margin-bottom:4px}
+  .legend .sub{color:var(--faint);font-size:13px;margin-bottom:20px}
+  .fix{display:flex;gap:14px;margin-bottom:17px;opacity:.4;transition:.25s ease}
+  body.after .fix{opacity:1}
+  .fix .num{flex:0 0 auto;width:26px;height:26px;border-radius:50%;background:var(--coral);color:#16100f;font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center}
+  body.before .fix .num{background:var(--surface2);color:var(--faint)}
+  .fix h4{font-size:15px;font-weight:700;margin-bottom:3px}
+  .fix p{font-size:13.5px;color:var(--muted);line-height:1.5}
+  .fix .was{color:var(--faint);font-size:12.5px;margin-top:4px;line-height:1.45}
+  .fix .was b{color:var(--coral-soft);font-weight:600}
+
+  .toast{position:fixed;left:50%;bottom:30px;transform:translateX(-50%) translateY(24px);background:var(--surface2);border:1px solid var(--line);color:var(--cream);padding:12px 18px;border-radius:12px;font-size:13.5px;font-weight:500;opacity:0;pointer-events:none;transition:.3s ease;box-shadow:0 20px 50px -20px rgba(0,0,0,.8);max-width:90vw;text-align:center}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .toast b{color:var(--coral-soft)}
+
+  .made{max-width:760px;margin:48px auto 0;padding-top:30px;border-top:1px solid var(--line)}
+  .made h3{font-family:'Fraunces',serif;font-weight:500;font-size:22px;margin-bottom:4px}
+  .made .sub{color:var(--faint);font-size:13px;margin-bottom:24px}
+  .made ol{list-style:none;counter-reset:s}
+  .step{position:relative;padding:0 0 20px 46px;counter-increment:s}
+  .step::before{content:counter(s);position:absolute;left:0;top:-2px;width:28px;height:28px;border-radius:50%;background:var(--surface2);color:var(--muted);font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center}
+  .step.pivot::before{background:var(--coral);color:#16100f;box-shadow:0 0 0 4px rgba(255,106,90,.16)}
+  .step:not(:last-child)::after{content:"";position:absolute;left:13.5px;top:30px;bottom:2px;width:1px;background:var(--line)}
+  .step h4{font-size:15px;font-weight:700;margin-bottom:3px}
+  .step.pivot h4{color:var(--coral-soft)}
+  .step p{font-size:13.5px;color:var(--muted);line-height:1.55}
+  .made .take{margin-top:8px;font-size:13.5px;color:var(--cream);background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--coral);border-radius:10px;padding:13px 15px;line-height:1.55}
+
+  @media(max-width:780px){body{padding:30px 16px 70px}.stage{justify-content:center}.legend{order:3}}
+</style>
+</head>
+<body class="after">
+<div class="wrap">
+  <div class="kicker">Interactive concept · product critique</div>
+  <h1 class="title">A re-engagement prompt that <em>forgot who I am</em></h1>
+  <p class="lede">Surfaced from the home screen to a Silver-tier member with ten bookings and a list of saved shows, TodayTix's personalisation prompt asks her to hand-build a taste profile from a wall of unlabelled cards — ignoring everything it already knows — then offers no way out, and never appears again. Toggle between what's there now and a warmer fix.</p>
+  <p class="disclaimer">Independent UX exploration for an application exercise — not affiliated with, or endorsed by, TodayTix. All artwork is CSS; names, reasons and examples are illustrative placeholders based on one member's real scenario.</p>
+
+  <div class="toggle" role="tablist" aria-label="Compare states">
+    <button data-m="before" onclick="setMode('before')"><span class="dot"></span>Before — what's there now</button>
+    <button data-m="after" class="active" onclick="setMode('after')"><span class="dot"></span>After — proposed (warm)</button>
+  </div>
+  <div class="mode-note" id="modeNote"></div>
+
+  <div class="stage">
+    <div class="phone">
+      <div class="screen">
+        <div class="statusbar"><span>12:15</span><span class="sig">●●●●  Wi-Fi  ▮▮▮</span></div>
+        <div class="scroll">
+          <div class="h-top">
+            <div>
+              <div class="hello after-txt">Welcome back, Michaela</div>
+              <div class="scr-title"><span class="before-txt">Enhance your experience</span><span class="after-txt">Let's tune your recommendations</span></div>
+            </div>
+            <button class="skip" onclick="skip()">Maybe later <span class="anno">3</span></button>
+          </div>
+          <div class="scr-sub">
+            <span class="before-txt">Save at least one Collection and we'll keep you updated on what matters to you.</span>
+            <span class="after-txt">Built from the <b style="color:var(--cream)">10 shows you've booked</b> and the <b style="color:var(--cream)">ones you've saved</b> — tweak anything below.</span>
+          </div>
+
+          <!-- AFTER: picked for you -->
+          <div class="after-only">
+            <div class="seclabel">Picked for you <span class="anno anno-inline">1</span>
+              <span class="micro">Because of what you've already booked and saved</span>
+            </div>
+            <div class="picks" id="picks"></div>
+
+            <div class="seclabel">More to explore <span class="anno anno-inline">2</span>
+              <span class="micro">Tap a card to see what's inside · tap the ribbon to save</span>
+            </div>
+            <div class="grid" id="explore"></div>
+          </div>
+
+          <!-- BEFORE: cold themes grid -->
+          <div class="before-only">
+            <div class="seclabel">Themes</div>
+            <div class="grid" id="themes"></div>
+          </div>
+        </div>
+
+        <div class="foot">
+          <span class="anno">4</span>
+          <div class="helper zero" id="helper"></div>
+          <button class="cta" id="cta" onclick="finish()"></button>
+        </div>
+      </div>
+    </div>
+
+    <div class="legend">
+      <h3>The four fixes</h3>
+      <div class="sub">Each maps to a way the current screen squanders a high-value moment.</div>
+
+      <div class="fix"><div class="num">1</div><div>
+        <h4>Start warm — use what you already know</h4>
+        <p>Lead with a few Collections chosen from the member's bookings and saved shows, each with the reason it's there. The ask becomes "confirm and refine," not "start from scratch."</p>
+        <div class="was">Now: <b>ignores 10 bookings and every saved show</b> — a loyal member is cold-started like a stranger.</div>
+      </div></div>
+
+      <div class="fix"><div class="num">2</div><div>
+        <h4>Preview before you commit</h4>
+        <p>A tap reveals what's inside a Collection, so a save is an informed choice.</p>
+        <div class="was">Now: <b>names only</b> — even a regular can't decode "Beat the clock" or "The 'Like a Londoner' Edit."</div>
+      </div></div>
+
+      <div class="fix"><div class="num">3</div><div>
+        <h4>An exit that comes back</h4>
+        <p>"Maybe later" lets the member leave — and quietly re-surfaces the prompt next session until it's done or dismissed for good.</p>
+        <div class="was">Now: <b>no way out</b>, and once you leave it <b>vanishes and never returns</b>.</div>
+      </div></div>
+
+      <div class="fix"><div class="num">4</div><div>
+        <h4>A CTA that explains itself</h4>
+        <p>A stateful, plain-language button that says where you stand.</p>
+        <div class="was">Now: <b>greyed-out "Finish"</b>, no helper text, no reason given.</div>
+      </div></div>
+    </div>
+  </div>
+
+  <section class="made">
+    <h3>How this was made</h3>
+    <div class="sub">The honest back-and-forth — including where the AI was wrong and I had to steer.</div>
+    <ol>
+      <li class="step"><h4>Started from friction I hit myself</h4><p>As a Silver-tier member, I tapped a banner on my own home screen to improve my recommendations — and ran straight into cards I couldn't decode, no way back, and a dead "Finish."</p></li>
+      <li class="step"><h4>The first AI pass got the framing wrong — usefully</h4><p>Working it through with Claude, its opening read was "confusing new-user onboarding." Reasonable, but it missed the thing that actually makes this interesting.</p></li>
+      <li class="step pivot"><h4>The reframe — the part only I could bring</h4><p>I'm not a new user; I'm a loyal one. Feeding in my tier, my ten bookings and the shows I'd already saved flipped the critique entirely: the real failure is cold-starting a member the app already understands.</p></li>
+      <li class="step"><h4>Pushed the data angle further</h4><p>Then noticed my <em>saved</em> shows changed nothing either — and that the prompt vanished after a single view and never came back. A one-shot, unrecoverable moment.</p></li>
+      <li class="step"><h4>Prototyped the warm version</h4><p>Used Claude to build and iterate the before/after above — seeding suggestions from behaviour, preview-on-tap, an exit that returns, and a stateful CTA.</p></li>
+    </ol>
+    <div class="take"><b>The takeaway:</b> AI made this fast; the judgement about where it was wrong is what made it good. I treat the first answer as a draft to interrogate, and bring the context the model can't have.</div>
+  </section>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  function bmIcon(){ return '<svg viewBox="0 0 24 24"><path d="M6 3h12v18l-6-4-6 4V3z"/></svg>'; }
+
+  // pre-selected, reasoned suggestions (after)
+  var picks = [
+    {id:'p_rlt',   name:"Rebecca Lucy Taylor's Collection", t:'t6', why:'Because you saved <b>Teeth \u2019n\u2019 Smiles</b>'},
+    {id:'p_clock', name:'Beat the clock',                   t:'t2', why:'<b>2 of your saved shows</b> close within two weeks'},
+    {id:'p_london',name:"The 'Like a Londoner' Edit",       t:'t3', why:'You\u2019ve booked <b>10 shows</b> across London'}
+  ];
+  // explore grid (after) — informed by preview
+  var explore = [
+    {id:'e_summer',name:'Cool for the summer',   t:'t1', desc:'Light, breezy shows for warm evenings.', eg:'open-air comedies \u00b7 alfresco musicals \u00b7 family matin\u00e9es'},
+    {id:'e_page',  name:'Page to stage',         t:'t4', desc:'Productions adapted from books you love.', eg:'novels and classics, reimagined for the stage'},
+    {id:'e_comedy',name:'Comedy gold',           t:'t5', desc:'Stand-up, farce and feel-good nights out.', eg:'big laughs \u00b7 improv \u00b7 West End comedy'},
+    {id:'e_date',  name:'Date night, done right',t:'t6', desc:'Romantic, intimate shows for two.', eg:'two-handers \u00b7 candlelit concerts \u00b7 cabaret'}
+  ];
+  // cold generic grid (before) — names only, no preview
+  var themes = [
+    {id:'b1',name:'Cool for the summer',t:'t1'},{id:'b2',name:'Beat the clock',t:'t2'},
+    {id:'b3',name:"Collect 'em all",t:'t3'},{id:'b4',name:'Page to stage',t:'t4'},
+    {id:'b5',name:'Comedy gold',t:'t5'},{id:'b6',name:'Date night, done right',t:'t6'}
+  ];
+
+  var saved = {p_rlt:true, p_clock:true, p_london:true}; // warm default: picks pre-selected
+
+  function renderPicks(){
+    var html='';
+    picks.forEach(function(p){
+      var s=!!saved[p.id];
+      html+='<div class="pick'+(s?' saved':'')+'" onclick="toggleSave(event,\''+p.id+'\')">';
+      html+='<div class="pick-thumb '+p.t+'"></div>';
+      html+='<div class="pick-body"><div class="pick-name">'+p.name+'</div><div class="why">'+p.why+'</div></div>';
+      html+='<button class="bm" onclick="toggleSave(event,\''+p.id+'\')" aria-label="Save">'+bmIcon()+'</button>';
+      html+='</div>';
+    });
+    document.getElementById('picks').innerHTML=html;
+  }
+
+  function cardHTML(c, withPreview){
+    var s=!!saved[c.id];
+    var h='<div class="card'+(s?' saved':'')+'" data-id="'+c.id+'" onclick="tapCard(event,\''+c.id+'\','+(withPreview?'true':'false')+')">';
+    h+='<div class="thumb '+c.t+'"><button class="bm" onclick="toggleSave(event,\''+c.id+'\')" aria-label="Save">'+bmIcon()+'</button></div>';
+    h+='<div class="cap">'+c.name+'</div>';
+    if(withPreview){
+      h+='<div class="preview"><div class="preview-inner">';
+      h+='<div class="preview-desc">'+c.desc+'</div>';
+      h+='<div class="preview-eg"><b>Inside:</b> '+c.eg+'</div>';
+      h+='<div class="save-row"><span>'+(s?'Saved to your taste':'Add to your taste')+'</span>';
+      h+='<span class="save-pill" onclick="toggleSave(event,\''+c.id+'\')">'+(s?'\u2713 Saved':'+ Save')+'</span></div>';
+      h+='</div></div>';
+    }
+    h+='</div>';
+    return h;
+  }
+  function renderExplore(){ document.getElementById('explore').innerHTML = explore.map(function(c){return cardHTML(c,true);}).join(''); }
+  function renderThemes(){ document.getElementById('themes').innerHTML = themes.map(function(c){return cardHTML(c,false);}).join(''); }
+
+  function tapCard(e,id,withPreview){
+    if(!withPreview) return;                  // before grid: card body inert
+    if(document.body.classList.contains('before')) return;
+    e.currentTarget.classList.toggle('open');
+  }
+
+  function toggleSave(e,id){
+    e.stopPropagation();
+    saved[id]=!saved[id];
+    renderPicks(); renderExplore(); renderThemes();
+    if(document.body.classList.contains('after')){
+      var card=document.querySelector('.card[data-id="'+id+'"]');
+      if(card && saved[id]) card.classList.add('open');
+    }
+    updateFooter();
+  }
+
+  function afterCount(){
+    return Object.keys(saved).filter(function(k){return saved[k] && k.charAt(0)!=='b';}).length;
+  }
+
+  function updateFooter(){
+    if(document.body.classList.contains('before')) return;
+    var n=afterCount(), helper=document.getElementById('helper'), cta=document.getElementById('cta');
+    if(n===0){
+      helper.className='helper zero';
+      helper.textContent='Pick at least one — or tap Maybe later and we\u2019ll remind you.';
+      cta.classList.remove('has'); cta.removeAttribute('data-label');
+    }else{
+      helper.className='helper go';
+      helper.textContent=(n===picks.length?'Starting from your '+n+' suggestions — tweak any time.':n+' selected — tweak any time.');
+      cta.classList.add('has');
+      cta.setAttribute('data-label','Save & personalise  \u00b7  '+n);
+    }
+  }
+
+  function setMode(m){
+    document.body.className=m;
+    document.querySelectorAll('.toggle button').forEach(function(b){b.classList.toggle('active',b.getAttribute('data-m')===m);});
+    document.getElementById('modeNote').textContent = (m==='before')
+      ? 'As shipped: a generic grid that uses nothing it knows about the member, can\u2019t be exited, and ends in a greyed-out \u201CFinish.\u201D'
+      : 'Proposed: open with suggestions drawn from her bookings and saved shows, each with a reason; preview the rest; leave and be reminded; a CTA that tells her where she stands.';
+    document.querySelectorAll('.card.open').forEach(function(c){c.classList.remove('open');});
+    updateFooter();
+  }
+
+  function skip(){ showToast('No problem \u2014 we\u2019ll bring this back <b>next time you open the app</b>.'); }
+
+  function finish(){
+    if(document.body.classList.contains('before')){ showToast('\u201CFinish\u201D is disabled here \u2014 but nothing tells you why, or how.'); return; }
+    var n=afterCount();
+    if(n===0){ showToast('Pick at least one above, or tap <b>Maybe later</b>.'); return; }
+    showToast('Great \u2014 tuning your home screen from <b>'+n+'</b> collection'+(n>1?'s':'')+'\u2026');
+  }
+
+  var toastTimer;
+  function showToast(html){
+    var t=document.getElementById('toast'); t.innerHTML=html; t.classList.add('show');
+    clearTimeout(toastTimer); toastTimer=setTimeout(function(){t.classList.remove('show');},2800);
+  }
+
+  renderPicks(); renderExplore(); renderThemes(); setMode('after');
+</script>
+</body>
+</html>
