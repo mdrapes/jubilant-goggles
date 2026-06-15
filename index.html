@@ -357,7 +357,7 @@
     document.querySelectorAll('.toggle button').forEach(function(b){b.classList.toggle('active',b.getAttribute('data-m')===m);});
     document.getElementById('modeNote').textContent = (m==='before')
       ? 'As shipped: a generic grid that uses nothing it knows about the member, can\u2019t be exited, and ends in a greyed-out \u201CFinish.\u201D'
-      : 'Proposed: open with suggestions drawn from her bookings and saved shows, each with a reason; preview the rest; leave and be reminded; a CTA that tells her where she stands.';
+      : 'Proposed: open with suggestions drawn from my bookings and saved shows, each with a reason; preview the rest; leave and be reminded; a CTA that tells the user where they stand.';
     document.querySelectorAll('.card.open').forEach(function(c){c.classList.remove('open');});
     updateFooter();
   }
